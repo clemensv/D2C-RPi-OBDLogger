@@ -1,0 +1,80 @@
+iff -Nru obdgpslogger-0.16/debian/changelog obdgpslogger-0.16/debian/changelog
+obdgpslogger-0.16/debian/changelog 2011-07-17 03:42:08.000000000 +0200
++++ obdgpslogger-0.16/debian/changelog 2012-06-23 08:43:56.000000000 +0200
+@@ -1,3 +1,12 @@
++obdgpslogger (0.16-1.2) unstable; urgency=low
++
++ * Non-maintainer upload.
++ * Adding patch from Derek LaHousse <dlahouss@mtu.edu>
++ to make obdgpslogger work with gpsd api v3.
++ Closes: #648495
++
++ -- Bernd Zeimetz <bzed@debian.org> Sat, 23 Jun 2012 08:43:54 +0200
++
+obdgpslogger (0.16-1.1) unstable; urgency=low
+
+* Non-maintainer upload with maintainer's permission.
+diff -Nru obdgpslogger-0.16/debian/patches/gpsd_v3 obdgpslogger-0.16/debian/patches/gpsd_v3
+obdgpslogger-0.16/debian/patches/gpsd_v3 1970-01-01 01:00:00.000000000 +0100
++++ obdgpslogger-0.16/debian/patches/gpsd_v3 2012-06-23 08:42:32.000000000 +0200
+@@ -0,0 +1,52 @@
++Patch from Derek LaHousse <dlahouss@mtu.edu>
++Fixes #648495
++
++
++ a/src/logger/gpscomm.c
+++++ b/src/logger/gpscomm.c
++@@ -23,16 +23,21 @@ along with obdgpslogger. If not, see <h
++
++ #ifdef HAVE_GPSD
++
+++#include <stdlib.h>
++ #include <gps.h>
++
++ struct gps_data_t *opengps(char *server, char *port) {
+++#ifdef HAVE_GPSD_V3
+++ int ret = 0;
+++ struct gps_data_t *g = malloc(sizeof(struct gps_data_t));
+++ if (ret = gps_open(server, port, g) == -1)
+++ return NULL;
+++ gps_stream(g, WATCH_ENABLE|WATCH_NEWSTYLE, NULL);
+++#else
++ struct gps_data_t *g = gps_open(server,port);
++ if(NULL == g)
++ return NULL;
++
++-#ifdef HAVE_GPSD_V3
++- gps_stream(g, WATCH_ENABLE|WATCH_NEWSTYLE, NULL);
++-#else
++ gps_query(g, "o");
++ #endif //HAVE_GPSD_V3
++
++@@ -40,6 +45,11 @@ struct gps_data_t *opengps(char *server,
++ }
++
++ void closegps(struct gps_data_t *g) {
+++#ifdef HAVE_GPSD_V3
+++ gps_stream(g, WATCH_DISABLE, NULL);
+++ free(g);
+++ g = NULL;
+++#endif //HAVE_GPSD_V3
++ gps_close(g);
++ }
++
++@@ -58,7 +68,7 @@ int getgpsposition(struct gps_data_t *g,
++ count = select(g->gps_fd + 1, &fds, NULL, NULL, &timeout);
++ if(count > 0) {
++ #ifdef HAVE_GPSD_V3
++- gps_poll(g);
+++ gps_read(g);
++ #else
++ gps_query(g, "o");
++ #endif //HAVE_GPSD_V3
+diff -Nru obdgpslogger-0.16/debian/patches/series obdgpslogger-0.16/debian/patches/series
+obdgpslogger-0.16/debian/patches/series 2011-07-17 03:42:12.000000000 +0200
++++ obdgpslogger-0.16/debian/patches/series 2012-06-23 08:40:38.000000000 +0200
+@@ -1 +1,2 @@
+debian-changes-0.16-1.1
++gpsd_v3
+
+

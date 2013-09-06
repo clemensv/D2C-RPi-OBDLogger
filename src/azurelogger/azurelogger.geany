@@ -14,14 +14,39 @@ indent_mode=2
 
 [project]
 name=azurelogger
-base_path=/home/pi/git/obdgpslogger/src/azurelogger
+base_path=/home/clemensv/git/D2C-RPi-OBDLogger
+description=
+file_patterns=
 
 [long line marker]
 long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=-1
+current_page=2
+FILE_NAME_0=984;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Fazurelogger%2Fgpscomm.c;0;4
+FILE_NAME_1=0;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Fazurelogger%2Fgpscomm.h;0;4
+FILE_NAME_2=11051;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Fazurelogger%2Fmain.c;0;4
+FILE_NAME_3=0;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Fazurelogger%2Fmain.h;0;4
+FILE_NAME_4=3740;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Fazurelogger%2Fobddbus.c;0;4
+FILE_NAME_5=0;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Fazurelogger%2Fobddbus.h;0;4
+FILE_NAME_6=776;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Fobdcomm%2Fsupportedcommands.h;0;4
+FILE_NAME_7=1064;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Fobdinfo%2Fdtccodes.h;0;4
+FILE_NAME_8=2584;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Fobdinfo%2Fobdservicecommands.h;0;4
+FILE_NAME_9=2081;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Fsim%2Fobdsim.h;0;4
+FILE_NAME_10=13009;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Flogger%2Fmain.c;0;4
+FILE_NAME_11=2118;C;0;16;1;1;0;%2Fhome%2Fclemensv%2Fgit%2FD2C-RPi-OBDLogger%2Fsrc%2Flogger%2Fobddb.c;0;4
 
 [VTE]
-last_dir=/home/pi
+last_dir=/home
+
+[build-menu]
+NF_00_LB=_Make
+NF_00_CM=make
+NF_00_WD=%p/build
+NF_01_LB=Make Custom _Target
+NF_01_CM=make 
+NF_01_WD=%p/build
+NF_02_LB=Make _Object
+NF_02_CM=make %e.o
+NF_02_WD=%p/build

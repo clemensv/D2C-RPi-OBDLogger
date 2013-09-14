@@ -554,6 +554,7 @@ int main(int argc, char** argv)
 		if(gpsstatus < 0 || NULL == gpsdata)
 		{
 			// Nothing yet, write out nulls
+			int p;
 			for ( p = 0; p < 6; p++)
 			{
 				pn_data_put_null(body);

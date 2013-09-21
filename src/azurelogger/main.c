@@ -594,7 +594,7 @@ int main(int argc, char** argv)
 
 		nrows ++;
 		// we flush the data out if the 
-		if ( pn_data_size(body) > 8 * 1024 || lastRpm > 0 && currentRpm == 0)
+		if ( pn_data_size(body) > 8 * 1024 || (lastRpm > 0 && currentRpm == 0))
 		{
 			printf("message %d sent with %d rows\n", ++nmessage, nrows);
 			nrows = 0;

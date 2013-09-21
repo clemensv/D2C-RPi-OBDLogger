@@ -46,6 +46,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include <fcntl.h>
 #include <time.h>
 #include <getopt.h>
@@ -419,8 +420,9 @@ int main(int argc, char** argv)
 	double time_insert;
 	// The last time we tried to check the gps daemon
 	double time_lastgpscheck = 0;
-
-
+    int lastRpm = 0;
+	int currentRpm = 0;
+   
 	pn_message_t * message = NULL;
 	pn_messenger_t * messenger;
 	pn_data_t * body = NULL;
@@ -501,11 +503,16 @@ int main(int argc, char** argv)
 			{
 				float val;
 				unsigned int cmdid = obdcmds_mode1[supportedObdCommandsMap[i]].cmdid;
+				bool isRpm = cmdid == 0x0C; // Engine RPM
 				int numbytes = enable_optimisations?obdcmds_mode1[supportedObdCommandsMap[i]].bytes_returned:0;
 				OBDConvFunc conv = obdcmds_mode1[supportedObdCommandsMap[i]].conv;
 				enum obd_serial_status obdstatus = getobdvalue(obd_serial_port, cmdid, &val, numbytes, conv);
 				if(OBD_SUCCESS == obdstatus)
 				{
+					if ( isRpm ) 
+				    {
+						currentRpm = val;	
+				    }
 					if(spam_stdout)
 					{
 						printf("%s=%f\n", obdcmds_mode1[supportedObdCommandsMap[i]].db_column, val);
@@ -524,8 +531,7 @@ int main(int argc, char** argv)
 				pn_data_put_null(body);
 			}
 		}
-
-
+       
 #ifdef HAVE_GPSD
 		// Get the GPS data
 		double lat,lon,alt,speed,course,gpstime;
@@ -587,8 +593,8 @@ int main(int argc, char** argv)
 		pn_data_exit(body);
 
 		nrows ++;
-		if ( pn_data_size(body) > 60 * 1024 ||
-		        false)
+		// we flush the data out if the 
+		if ( pn_data_size(body) > 8 * 1024 || lastRpm > 0 && currentRpm == 0)
 		{
 			printf("message %d sent with %d rows\n", ++nmessage, nrows);
 			nrows = 0;
@@ -607,6 +613,7 @@ int main(int argc, char** argv)
 			message = NULL;
 
 		}
+		lastRpm = currentRpm;
 
 		if(0 != gettimeofday(&endtime,NULL))
 		{

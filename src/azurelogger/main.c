@@ -51,6 +51,7 @@ along with obdgpslogger.  If not, see <http://www.gnu.org/licenses/>.
 #include <time.h>
 #include <getopt.h>
 #include <unistd.h>
+#include <uuid/uuid.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -103,6 +104,8 @@ void die(const char *file, int line, const char *message)
 
 int main(int argc, char** argv)
 {
+	int maxMsgPayload = 1 * 1024;
+	
 	/// Serial port full path to open
 	char *serialport = NULL;
 
@@ -116,7 +119,7 @@ int main(int argc, char** argv)
 	int samplecount = -1;
 
 	/// Number of samples per second
-	int samplespersecond = 5;
+	int samplespersecond = 10;
 
 	/// Ask to show the capabilities of the OBD device then exit
 	int showcapabilities = 0;
@@ -138,6 +141,8 @@ int main(int argc, char** argv)
 
 	/// Serial log filename
 	char *seriallogname = NULL;
+	
+	uuid_t driveid;
 
 #ifdef OBDPLATFORM_POSIX
 	/// Daemonise
@@ -157,6 +162,8 @@ int main(int argc, char** argv)
 		requested_baud = obd_config->baudrate;
 		baudrate_upgrade = obd_config->baudrate_upgrade;
 	}
+
+    uuid_generate(driveid);
 
 	// Do not attempt to buffer stdout at all
 	setvbuf(stdout, (char *)NULL, _IONBF, 0);
@@ -445,7 +452,8 @@ int main(int argc, char** argv)
 			// set the outer map that'll hold all message content
 			pn_data_put_map(body);
 			pn_data_enter(body);
-
+            pn_data_put_string(body, pn_bytes(strlen("id"), "id"));
+			pn_data_put_uuid(body, *(pn_uuid_t*)&driveid);
 			// store the list of headers. "h" : list of string
 			pn_data_put_string(body, pn_bytes(strlen("h"), "h"));
 			pn_data_put_list(body);
@@ -594,7 +602,7 @@ int main(int argc, char** argv)
 
 		nrows ++;
 		// we flush the data out if the 
-		if ( pn_data_size(body) > 8 * 1024 || (lastRpm > 0 && currentRpm == 0))
+		if ( pn_data_size(body) > maxMsgPayload || (lastRpm > 0 && currentRpm == 0))
 		{
 			printf("message %d sent with %d rows\n", ++nmessage, nrows);
 			nrows = 0;

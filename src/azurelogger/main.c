@@ -88,24 +88,23 @@ static void catch_tripstartsignal(int sig)
 }
 
 #define check(messenger)                                                     \
-  {                                                                          \
-    if(pn_messenger_errno(messenger))                                        \
-    {                                                                        \
-      die(__FILE__, __LINE__, pn_error_text(pn_messenger_error(messenger))); \
-    }                                                                        \
-  }                                                                          \
-
-void die(const char *file, int line, const char *message)
+	{                                                                          \
+		if(pn_messenger_errno(messenger))                                        \
+		{                                                                        \
+			logmsgerr(__FILE__, __LINE__, pn_error_text(pn_messenger_error(messenger))); \
+		}                                                                        \
+	}                                                                          \
+	 
+void logmsgerr(const char *file, int line, const char *message)
 {
-  fprintf(stderr, "%s:%i: %s\n", file, line, message);
-  exit(1);
+	fprintf(stderr, "%s:%i: %s\n", file, line, message);
 }
 
 
 int main(int argc, char** argv)
 {
 	int maxMsgPayload = 1 * 1024;
-	
+
 	/// Serial port full path to open
 	char *serialport = NULL;
 
@@ -141,7 +140,7 @@ int main(int argc, char** argv)
 
 	/// Serial log filename
 	char *seriallogname = NULL;
-	
+
 	uuid_t driveid;
 
 #ifdef OBDPLATFORM_POSIX
@@ -155,25 +154,22 @@ int main(int argc, char** argv)
 	// Config File
 	struct OBDGPSConfig *obd_config = obd_loadConfig(0);
 
-	if(NULL != obd_config)
-	{
+	if(NULL != obd_config) {
 		samplespersecond = obd_config->samplerate;
 		enable_optimisations = obd_config->optimisations;
 		requested_baud = obd_config->baudrate;
 		baudrate_upgrade = obd_config->baudrate_upgrade;
 	}
 
-    uuid_generate(driveid);
+	uuid_generate(driveid);
 
 	// Do not attempt to buffer stdout at all
 	setvbuf(stdout, (char *)NULL, _IONBF, 0);
 
 	int optc;
 	int mustexit = 0;
-	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1)
-	{
-		switch (optc)
-		{
+	while ((optc = getopt_long (argc, argv, shortopts, longopts, NULL)) != -1) {
+		switch (optc) {
 		case 'h':
 			printhelp(argv[0]);
 			mustexit = 1;
@@ -183,8 +179,7 @@ int main(int argc, char** argv)
 			mustexit = 1;
 			break;
 		case 's':
-			if(NULL != serialport)
-			{
+			if(NULL != serialport) {
 				free(serialport);
 			}
 			serialport = strdup(optarg);
@@ -195,16 +190,12 @@ int main(int argc, char** argv)
 		case 't':
 			spam_stdout = 1;
 			break;
-		case 'u':
-		{
+		case 'u': {
 			int newout = open(optarg, O_CREAT|O_RDWR|O_APPEND,
 			                  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-			if(-1 == newout)
-			{
+			if(-1 == newout) {
 				perror(optarg);
-			}
-			else
-			{
+			} else {
 				printf("Redirecting output to %s\n", optarg);
 				close(STDOUT_FILENO);
 				close(STDERR_FILENO);
@@ -228,15 +219,13 @@ int main(int argc, char** argv)
 			baudrate_upgrade = strtol(optarg, (char **)NULL, 10);
 			break;
 		case 'q':
-			if(NULL != queueAddress)
-			{
+			if(NULL != queueAddress) {
 				free(queueAddress);
 			}
 			queueAddress = strdup(optarg);
 			break;
 		case 'i':
-			if(NULL != log_columns)
-			{
+			if(NULL != log_columns) {
 				free(log_columns);
 			}
 			log_columns = strdup(optarg);
@@ -246,8 +235,7 @@ int main(int argc, char** argv)
 			break;
 		case 'l':
 			enable_seriallog = 1;
-			if(NULL != seriallogname)
-			{
+			if(NULL != seriallogname) {
 				free(seriallogname);
 			}
 			seriallogname = strdup(optarg);
@@ -263,53 +251,37 @@ int main(int argc, char** argv)
 
 	if(mustexit) exit(0);
 
-	if(0 >= samplespersecond)
-	{
+	if(0 >= samplespersecond) {
 		frametime = 0;
-	}
-	else
-	{
+	} else {
 		frametime = 1000000 / samplespersecond;
 	}
 
-	if(NULL == serialport)
-	{
-		if(NULL != obd_config && NULL != obd_config->obd_device)
-		{
+	if(NULL == serialport) {
+		if(NULL != obd_config && NULL != obd_config->obd_device) {
 			serialport = strdup(obd_config->obd_device);
-		}
-		else
-		{
+		} else {
 			serialport = strdup(OBD_DEFAULT_SERIALPORT);
 		}
 	}
-	if(NULL == queueAddress)
-	{
-		if(NULL != obd_config && NULL != obd_config->log_file)
-		{
+	if(NULL == queueAddress) {
+		if(NULL != obd_config && NULL != obd_config->log_file) {
 			queueAddress = strdup(obd_config->log_file);
-		}
-		else
-		{
+		} else {
 			fprintf(stderr, "No queue address.\n");
 			exit(1);
 		}
 	}
-	if(NULL == log_columns)
-	{
-		if(NULL != obd_config && NULL != obd_config->log_columns)
-		{
+	if(NULL == log_columns) {
+		if(NULL != obd_config && NULL != obd_config->log_columns) {
 			log_columns = strdup(obd_config->log_columns);
-		}
-		else
-		{
+		} else {
 			log_columns = strdup(OBD_DEFAULT_COLUMNS);
 		}
 	}
 
 
-	if(enable_seriallog && NULL != seriallogname)
-	{
+	if(enable_seriallog && NULL != seriallogname) {
 		startseriallog(seriallogname);
 	}
 
@@ -317,18 +289,14 @@ int main(int argc, char** argv)
 	// Open the serial port.
 	int obd_serial_port = openserial(serialport, requested_baud, baudrate_upgrade);
 
-	if(-1 == obd_serial_port)
-	{
+	if(-1 == obd_serial_port) {
 		fprintf(stderr, "Couldn't open obd serial port. Attempting to continue.\n");
-	}
-	else
-	{
+	} else {
 		fprintf(stderr, "Successfully connected to serial port. Will log obd data\n");
 	}
 
 	// Just figure out our car's OBD port capabilities and print them
-	if(showcapabilities)
-	{
+	if(showcapabilities) {
 		printobdcapabilities(obd_serial_port);
 
 		printf("\n");
@@ -342,12 +310,9 @@ int main(int argc, char** argv)
 	struct gps_data_t *gpsdata;
 	gpsdata = opengps(GPSD_ADDR, GPSD_PORT);
 
-	if(NULL == gpsdata)
-	{
+	if(NULL == gpsdata) {
 		fprintf(stderr, "Couldn't open gps port on startup.\n");
-	}
-	else
-	{
+	} else {
 		fprintf(stderr, "Successfully connected to gpsd. Will log gps data\n");
 	}
 
@@ -355,10 +320,9 @@ int main(int argc, char** argv)
 
 	if(-1 == obd_serial_port
 #ifdef HAVE_GPSD
-	        && NULL == gpsdata
+	   && NULL == gpsdata
 #endif //HAVE_GPSD
-	  )
-	{
+	  ) {
 		fprintf(stderr, "Couldn't find either gps or obd to log. Exiting.\n");
 		exit(1);
 	}
@@ -375,22 +339,17 @@ int main(int argc, char** argv)
 
 	int q;
 	int totalSupportedObdCommands = 0;
-	for(q=0; q<sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]); q++)
-	{
-		if(NULL != obdcmds_mode1[q].db_column  && isobdcapabilitysupported(obdcaps,q))
-		{
+	for(q=0; q<sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]); q++) {
+		if(NULL != obdcmds_mode1[q].db_column  && isobdcapabilitysupported(obdcaps,q)) {
 			totalSupportedObdCommands++;
 		}
 	}
 	int supportedObdCommandsMap[totalSupportedObdCommands]; // Commands to send [index into obdcmds_mode1]
 
 	int i,j;
-	for(i=0,j=0; i<sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]); i++)
-	{
-		if(NULL != obdcmds_mode1[i].db_column)
-		{
-			if(isobdcapabilitysupported(obdcaps,i))
-			{
+	for(i=0,j=0; i<sizeof(obdcmds_mode1)/sizeof(obdcmds_mode1[0]); i++) {
+		if(NULL != obdcmds_mode1[i].db_column) {
+			if(isobdcapabilitysupported(obdcaps,i)) {
 				supportedObdCommandsMap[j] = i;
 				j++;
 			}
@@ -401,10 +360,8 @@ int main(int argc, char** argv)
 
 
 #ifdef OBDPLATFORM_POSIX
-	if(daemonise)
-	{
-		if(0 != obddaemonise())
-		{
+	if(daemonise) {
+		if(0 != obddaemonise()) {
 			fprintf(stderr,"Couldn't daemonise, exiting\n");
 			closeserial(obd_serial_port);
 			exit(1);
@@ -421,15 +378,15 @@ int main(int argc, char** argv)
 
 	install_signalhandlers();
 
-    int nmessage = 0;
+	int nmessage = 0;
 	int nrows = 0;
 	// The current time we're inserting
 	double time_insert;
 	// The last time we tried to check the gps daemon
 	double time_lastgpscheck = 0;
-    int lastRpm = 0;
+	int lastRpm = 0;
 	int currentRpm = 0;
-   
+
 	pn_message_t * message = NULL;
 	pn_messenger_t * messenger;
 	pn_data_t * body = NULL;
@@ -438,21 +395,41 @@ int main(int argc, char** argv)
 	messenger = pn_messenger(NULL);
 	pn_messenger_start(messenger);
 
-	while(true)
-	{
+	// send the "start of trip" message
+	message = pn_message();
+	pn_message_set_address(message, queueAddress);
+	pn_message_set_subject(message, "trip");
+	body = pn_message_body(message);
+	pn_data_enter(body);
+	// set the outer map that'll hold all message content
+	pn_data_put_map(body);
+	pn_data_enter(body);
+	pn_data_put_string(body, pn_bytes(strlen("id"), "id"));
+	pn_data_put_uuid(body, *(pn_uuid_t*)&driveid);
+	pn_data_exit(body); // exit map
+	pn_data_exit(body); // exit body
+
+	pn_messenger_put(messenger, message);
+	check(messenger);
+	pn_messenger_send(messenger, -1);
+	check(messenger);
+	pn_message_free(message);
+	message = NULL;
+
+	while(true) {
 		// if we don't have a current message, make one and set it up to
 		// collect rows of readings
-		if ( message == NULL )
-		{
+		if ( message == NULL ) {
 			// create the message to take the first set of telemetry messages
 			message = pn_message();
 			pn_message_set_address(message, queueAddress);
+			pn_message_set_subject(message, "tele");
 			body = pn_message_body(message);
 			pn_data_enter(body);
 			// set the outer map that'll hold all message content
 			pn_data_put_map(body);
 			pn_data_enter(body);
-            pn_data_put_string(body, pn_bytes(strlen("id"), "id"));
+			pn_data_put_string(body, pn_bytes(strlen("id"), "id"));
 			pn_data_put_uuid(body, *(pn_uuid_t*)&driveid);
 			// store the list of headers. "h" : list of string
 			pn_data_put_string(body, pn_bytes(strlen("h"), "h"));
@@ -463,8 +440,7 @@ int main(int argc, char** argv)
 			pn_data_put_string(body, pn_bytes(3, "dtm"));
 
 			//Supported OBD Command Headers
-			for(i=0; i<totalSupportedObdCommands; i++)
-			{
+			for(i=0; i<totalSupportedObdCommands; i++) {
 				const char * columnId = obdcmds_mode1[supportedObdCommandsMap[i]].db_column;
 				pn_data_put_string(body, pn_bytes(strlen(columnId), (char *)columnId));
 			}
@@ -490,8 +466,7 @@ int main(int argc, char** argv)
 		struct timeval endtime; // end time through loop
 		struct timeval selecttime; // =endtime-starttime [for select()]
 
-		if(0 != gettimeofday(&starttime,NULL))
-		{
+		if(0 != gettimeofday(&starttime,NULL)) {
 			perror("Couldn't gettimeofday");
 			break;
 		}
@@ -505,79 +480,58 @@ int main(int argc, char** argv)
 		pn_data_put_double(body, time_insert);
 
 		// Get the OBD data of fill with NULLs if the OBD port isn't available
-		for(i=0; i<totalSupportedObdCommands-1; i++)
-		{
-			if( obd_serial_port >= 0)
-			{
+		for(i=0; i<totalSupportedObdCommands-1; i++) {
+			if( obd_serial_port >= 0) {
 				float val;
 				unsigned int cmdid = obdcmds_mode1[supportedObdCommandsMap[i]].cmdid;
 				bool isRpm = cmdid == 0x0C; // Engine RPM
 				int numbytes = enable_optimisations?obdcmds_mode1[supportedObdCommandsMap[i]].bytes_returned:0;
 				OBDConvFunc conv = obdcmds_mode1[supportedObdCommandsMap[i]].conv;
 				enum obd_serial_status obdstatus = getobdvalue(obd_serial_port, cmdid, &val, numbytes, conv);
-				if(OBD_SUCCESS == obdstatus)
-				{
-					if ( isRpm ) 
-				    {
-						currentRpm = val;	
-				    }
-					if(spam_stdout)
-					{
+				if(OBD_SUCCESS == obdstatus) {
+					if ( isRpm ) {
+						currentRpm = val;
+					}
+					if(spam_stdout) {
 						printf("%s=%f\n", obdcmds_mode1[supportedObdCommandsMap[i]].db_column, val);
 					}
 					// Add value to the map
 					pn_data_put_float(body, val);
-				}
-				else if (OBD_ERROR == obdstatus)
-				{
+				} else if (OBD_ERROR == obdstatus) {
 					fprintf(stderr, "Received OBD_ERROR from serial read. Exiting\n");
 					receive_exitsignal = 1;
 				}
-			}
-			else
-			{
+			} else {
 				pn_data_put_null(body);
 			}
 		}
-       
+
 #ifdef HAVE_GPSD
 		// Get the GPS data
 		double lat,lon,alt,speed,course,gpstime;
 
 		int gpsstatus = -1;
-		if(NULL != gpsdata)
-		{
+		if(NULL != gpsdata) {
 			gpsstatus = getgpsposition(gpsdata, &lat, &lon, &alt, &speed, &course, &gpstime);
-		}
-		else
-		{
-			if(time_insert - time_lastgpscheck > 10)   // Try again once in a while
-			{
+		} else {
+			if(time_insert - time_lastgpscheck > 10) { // Try again once in a while
 				gpsdata = opengps(GPSD_ADDR, GPSD_PORT);
-				if(NULL != gpsdata)
-				{
+				if(NULL != gpsdata) {
 					printf("Delayed connection to gps achieved\n");
-				}
-				else
-				{
+				} else {
 					// fprintf(stderr, "Delayed connection to gps failed\n");
 				}
 				time_lastgpscheck = time_insert;
 			}
 		}
-		if(gpsstatus < 0 || NULL == gpsdata)
-		{
+		if(gpsstatus < 0 || NULL == gpsdata) {
 			// Nothing yet, write out nulls
 			int p;
-			for ( p = 0; p < 6; p++)
-			{
+			for ( p = 0; p < 6; p++) {
 				pn_data_put_null(body);
 			}
-		}
-		else if(gpsstatus >= 0)
-		{
-			if(0 == have_gps_lock)
-			{
+		} else if(gpsstatus >= 0) {
+			if(0 == have_gps_lock) {
 				fprintf(stderr,"GPS acquisition complete\n");
 				have_gps_lock = 1;
 			}
@@ -589,8 +543,7 @@ int main(int argc, char** argv)
 			pn_data_put_double(body, course);
 			pn_data_put_double(body, gpstime);
 
-			if(spam_stdout)
-			{
+			if(spam_stdout) {
 				printf("gpspos=%f,%f,%f,%f,%f\n",
 				       lat, lon, (gpsstatus>=1?alt:-1000.0), speed, course);
 			}
@@ -601,12 +554,11 @@ int main(int argc, char** argv)
 		pn_data_exit(body);
 
 		nrows ++;
-		// we flush the data out if the 
-		if ( pn_data_size(body) > maxMsgPayload || (lastRpm > 0 && currentRpm == 0))
-		{
+		// we flush the data out if the
+		if ( pn_data_size(body) > maxMsgPayload || (lastRpm > 0 && currentRpm == 0)) {
 			printf("message %d sent with %d rows\n", ++nmessage, nrows);
 			nrows = 0;
-			
+
 			// table is done
 			pn_data_exit(body);
 			// map is done
@@ -623,52 +575,45 @@ int main(int argc, char** argv)
 		}
 		lastRpm = currentRpm;
 
-		if(0 != gettimeofday(&endtime,NULL))
-		{
+		if(0 != gettimeofday(&endtime,NULL)) {
 			perror("Couldn't gettimeofday");
 			break;
 		}
 
 		// Set via the signal handler
-		if(receive_exitsignal)
-		{
+		if(receive_exitsignal) {
 			break;
 		}
 
 
 		// usleep() not as portable as select()
-		if(0 < frametime)
-		{
+		if(0 < frametime) {
 			selecttime.tv_sec = endtime.tv_sec - starttime.tv_sec;
-			if (selecttime.tv_sec != 0)
-			{
+			if (selecttime.tv_sec != 0) {
 				endtime.tv_usec += 1000000*selecttime.tv_sec;
 				selecttime.tv_sec = 0;
 			}
 			selecttime.tv_usec = (frametime) -
 			                     (endtime.tv_usec - starttime.tv_usec);
-			if(selecttime.tv_usec < 0)
-			{
+			if(selecttime.tv_usec < 0) {
 				selecttime.tv_usec = 1;
 			}
 			select(0,NULL,NULL,NULL,&selecttime);
 		}
 	}
-    
+
 	pn_messenger_stop(messenger);
 	pn_messenger_free(messenger);
-	
+
 	closeserial(obd_serial_port);
 #ifdef HAVE_GPSD
-	if(NULL != gpsdata)
-	{
+	if(NULL != gpsdata) {
 		gps_close(gpsdata);
 	}
 #endif //HAVE_GPSD
 //TODO shutdown client
 
-	if(enable_seriallog)
-	{
+	if(enable_seriallog) {
 		closeseriallog();
 	}
 
@@ -688,8 +633,7 @@ static int obddaemonise()
 	int fd;
 	pid_t pid = fork();
 
-	switch (pid)
-	{
+	switch (pid) {
 	case -1:
 		perror("Couldn't fork");
 		return -1;
@@ -708,8 +652,7 @@ static int obddaemonise()
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
-	if ((fd = open("/dev/null", O_RDWR, 0)) != -1)
-	{
+	if ((fd = open("/dev/null", O_RDWR, 0)) != -1) {
 		dup2(fd, STDIN_FILENO);
 		dup2(fd, STDOUT_FILENO);
 		dup2(fd, STDERR_FILENO);
